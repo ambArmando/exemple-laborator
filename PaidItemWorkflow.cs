@@ -16,13 +16,15 @@ namespace lab1PSSC
 
             UnvalidatedCartItems unvalidatedCartItems = new UnvalidatedCartItems(command.InputCartItems);
             ICartItems items = ValidateCartItems(checkItemExists, unvalidatedCartItems);
-            //TO DO calculare pret
+            items = CalculatePrice(items);
+            items = PayCartItems(items);
 
             return items.Match(
                     whenEmptyCartItems: emptyCart => new CartItemsFailedPayEvent("Empty cart state") as ICartItemsPaidEvent,
                     whenUnvalidatedCartItems: unvalidatedCartItems => new CartItemsFailedPayEvent("Unexpected unvalidated state"),
                     whenInvalidatedCartItems: invalidCart => new CartItemsFailedPayEvent(invalidCart.Reason),
                     whenValidatedCartItems: validCart => new CartItemsFailedPayEvent("Unexpected validated state"),
+                    whenCalculatedItemPrice: calculated => new CartItemsFailedPayEvent("Unexpected calculated state"),
                     whenPaidCartItems: paidCartItems => new CartItemsSucceededPayEvent(paidCartItems.Csv, paidCartItems.ItemList.ToString())
                 );
         }

@@ -42,15 +42,24 @@ namespace lab1PSSC.Domain
             public IReadOnlyCollection<ValidatedCustomerItem> ItemList { get; }
         }
 
-        public record PaidCartItems : ICartItems {
-            internal PaidCartItems(IReadOnlyCollection<ValidatedCustomerItem> itemList, string address, string csv)
+        public record CalculatedItemPrice : ICartItems
+        {
+            internal CalculatedItemPrice(IReadOnlyCollection<ItemFinalPrice> itemList)
             {
                 ItemList = itemList;
-                Address = address;
+            }
+            public IReadOnlyCollection<ItemFinalPrice> ItemList { get; }
+        }
+
+        public record PaidCartItems : ICartItems {
+            internal PaidCartItems(IReadOnlyCollection<ItemFinalPrice> itemList, string csv)
+            {
+                ItemList = itemList;
+               
                 Csv = csv;
             }
-            public IReadOnlyCollection<ValidatedCustomerItem> ItemList { get; }
-            public string Address { get; }
+            public IReadOnlyCollection<ItemFinalPrice> ItemList { get; }
+           // public string Address { get; }
             public string Csv { get; }
         }
     }

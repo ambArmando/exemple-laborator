@@ -6,10 +6,60 @@ using lab1PSSC.Domain;
 
 namespace lab1PSSC
 {
+    
     class Program
     {
+        private static void showItems(List<UnvalidatedCustomerItem> list)
+        {
+            foreach(var item in list)
+            {
+                Console.WriteLine(item.itemDetails());
+            }
+
+        }
+
+        private static string checkItemExists(List<UnvalidatedCustomerItem> list, string cod) {
+            foreach (var item in list)
+            {
+                if (item.itemCode.Equals(cod))
+                {
+                    return "Produsul exista!";
+
+                }
+            }
+            return "Produsul nu exista sau cod gresit!";
+        }
+        private static string checkStock(List<UnvalidatedCustomerItem> list, string cod)
+        {
+            foreach (var item in list)
+            {
+                if (item.itemCode.Equals(cod) && Convert.ToInt64(item.itemQuantity) > 0)
+                {
+                    return $"Produsul este in stoc! Stoc:{item.itemQuantity}";
+
+                }
+            }
+            return "Produsul nu exista sau cod gresit!";
+        }
+        private static string checkAddress(List<UnvalidatedCustomerItem> list, string address)
+        {
+            foreach (var item in list)
+            {
+                if (item.address.Equals(address))
+                {
+                    return $"Adresa introdusa este corecta! {item.itemDetails()}";
+
+                }
+            }
+            return "Adresa invalida!";
+        }
+
         static void Main(string[] args) {
-            var listOfItems = ReadListOfItems().ToArray();
+            int opt = int.MaxValue;
+            var listOfItems = ReadListOfItems();
+            var listOfItemsCopy = new List<UnvalidatedCustomerItem>(listOfItems);
+            listOfItems.ToArray();
+            showItems(listOfItemsCopy);
             PayItemsCommand command = new(listOfItems);
             PaidItemWorkflow workflow = new PaidItemWorkflow();
             var result = workflow.Execute(command, (registrationCode) => true);
@@ -25,6 +75,35 @@ namespace lab1PSSC
                         return @event;
                     }
                 );
+
+            do {
+                Console.WriteLine("0.Exit");
+                Console.WriteLine("1.Verificare produs");
+                Console.WriteLine("2.Verificare stoc");
+                Console.WriteLine("3.Verificare adresa");
+                Console.WriteLine("alege: ");
+                opt = Convert.ToInt32(Console.ReadLine());
+
+                switch(opt) {
+                    case 1: string cod = "";
+                            Console.WriteLine("codul produsului cautat: ");
+                            cod = Console.ReadLine();
+                            Console.WriteLine(checkItemExists(listOfItemsCopy, cod));
+                            break;
+                    case 2:
+                            string verificareStoc = "";
+                            Console.WriteLine("codul produsului: ");
+                            verificareStoc = Console.ReadLine();
+                            Console.WriteLine(checkStock(listOfItemsCopy, verificareStoc));
+                            break;
+                    case 3:
+                        string verificareAdresa = "";
+                        Console.WriteLine("introduceti adresa: ");
+                        verificareAdresa = Console.ReadLine();
+                        Console.WriteLine(checkAddress(listOfItemsCopy, verificareAdresa));
+                        break;
+                }
+            } while (opt != 0);
 
         }
         private static List<UnvalidatedCustomerItem> ReadListOfItems() {
@@ -60,6 +139,7 @@ namespace lab1PSSC
 
             } while(true);
 
+           //showItems(listOfItems);
             return listOfItems;
         
         }

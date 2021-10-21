@@ -26,6 +26,8 @@ namespace lab1PSSC.Domain
             return $"{Value:0.##}";
         }
 
+        public static Item operator +(Item a, Item b) => new Item((a.Value + b.Value));
+
         public static bool TryParseItemQuantity(string itemqString, out Item itemq)
         {
             bool isValid = false;
