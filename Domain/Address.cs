@@ -4,7 +4,7 @@ namespace lab1PSSC.Domain
 {
     public record Address
     {
-        private static readonly Regex ValidPattern = new("^LM[0-9]{5}$");
+        private static readonly Regex ValidPattern = new("^RO");
 
         public string Value { get; }
 
@@ -19,6 +19,19 @@ namespace lab1PSSC.Domain
                 throw new InvalidAddressException("");
             }
         }
+        public static bool ValidateInputAddress(string address, out Address address1)
+        {
+            bool isValid = false;
+            address1 = null;
+            if (IsValid(address))
+            {
+                isValid = true;
+                address1 = new(address);
+            }
+            return isValid;
+        }
+
+        private static bool IsValid(string stringValue) => ValidPattern.IsMatch(stringValue);
 
         public override string ToString()
         {

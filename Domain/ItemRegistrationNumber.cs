@@ -9,7 +9,7 @@ namespace lab1PSSC.Domain
 {
     public record ItemRegistrationNumber
     {
-        private static readonly Regex ValidPattern = new("^LM[0-9]{5}$");
+        private static readonly Regex ValidPattern = new("^pr[0-9]");
 
         public string Value { get; }
 
@@ -24,6 +24,18 @@ namespace lab1PSSC.Domain
                 throw new InvalidItemRegistrationNumberException("");
             }
         }
+        public static bool ValidateInputRegistrationNumber(string itemCode, out ItemRegistrationNumber itemc)
+        {
+            bool isValid = false;
+            itemc = null;
+            if (IsValid(itemCode)) {
+                isValid = true;
+                itemc = new(itemCode);
+            }
+            return isValid;
+        }
+
+        private static bool IsValid(string stringValue) => ValidPattern.IsMatch(stringValue);
 
         public override string ToString()
         {

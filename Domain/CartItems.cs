@@ -14,12 +14,44 @@ namespace lab1PSSC.Domain
 
         public record EmptyCartItems(IReadOnlyCollection<UnvalidatedCustomerItem> ItemsList, string empty) : ICartItems;
 
-        public record UnvalidatedCartItems(IReadOnlyCollection<UnvalidatedCustomerItem> ItemsList) : ICartItems;
+        public record UnvalidatedCartItems : ICartItems { 
+            public UnvalidatedCartItems(IReadOnlyCollection<UnvalidatedCustomerItem> itemList)
+            {
+                ItemList = itemList;
+            }
+            public IReadOnlyCollection<UnvalidatedCustomerItem> ItemList { get; }
+        }
 
-        public record InvalidatedCartItems(IReadOnlyCollection<UnvalidatedCustomerItem> ItemsList, string reason) : ICartItems;
+        public record InvalidatedCartItems : ICartItems
+        {
+            internal InvalidatedCartItems(IReadOnlyCollection<UnvalidatedCustomerItem> itemList, string reason) {
+                ItemList = itemList;
+                Reason = reason;
+            }
+            public IReadOnlyCollection<UnvalidatedCustomerItem> ItemList { get; }
+            public string Reason { get; }
+            
+        }
 
-        public record ValidatedCartItems(IReadOnlyCollection<ValidatedCustomerItem> ItemsList) : ICartItems;
+        public record ValidatedCartItems : ICartItems
+        {
+            internal ValidatedCartItems(IReadOnlyCollection<ValidatedCustomerItem> itemList)
+            {
+                ItemList = itemList;
+            }
+            public IReadOnlyCollection<ValidatedCustomerItem> ItemList { get; }
+        }
 
-        public record PaidCartItems(IReadOnlyCollection<ValidatedCustomerItem> ItemsList, string address) : ICartItems;
+        public record PaidCartItems : ICartItems {
+            internal PaidCartItems(IReadOnlyCollection<ValidatedCustomerItem> itemList, string address, string csv)
+            {
+                ItemList = itemList;
+                Address = address;
+                Csv = csv;
+            }
+            public IReadOnlyCollection<ValidatedCustomerItem> ItemList { get; }
+            public string Address { get; }
+            public string Csv { get; }
+        }
     }
 }

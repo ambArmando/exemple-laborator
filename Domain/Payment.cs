@@ -15,6 +15,18 @@
                 throw new InvalidPaymentException($"{state:0.##} is an invalid paymnet value.");
             }
         }
+        public static bool ValidateInputPayment(string paymentinfo, out Payment payment)
+        {
+            bool isValid = false;
+            payment = null;
+            if (paymentinfo.Equals("y") || paymentinfo.Equals("n"))
+            {
+                isValid = true;
+                payment = new(paymentinfo);
+            }
+            return isValid;
+        }
+
         public override string ToString()
         {
             return $"{Value:0.##}";

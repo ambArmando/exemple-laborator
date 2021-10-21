@@ -8,11 +8,11 @@ namespace lab1PSSC.Domain
 {
     public record Item
     {
-        public decimal Value { get; }
+        public int Value { get; }
 
-        public Item(decimal quantity)
+        public Item(int quantity)
         {
-            if (quantity > 0 && quantity <= 100)
+            if (IsValid(quantity))
             {
                 Value = quantity;
             }
@@ -25,5 +25,20 @@ namespace lab1PSSC.Domain
         {
             return $"{Value:0.##}";
         }
+
+        public static bool TryParseItemQuantity(string itemqString, out Item itemq)
+        {
+            bool isValid = false;
+            itemq = null;
+            if (int.TryParse(itemqString, out int numericItemq)) {
+                if (IsValid(numericItemq)) {
+                    isValid = true;
+                    itemq = new(numericItemq);
+                }
+            }
+            return isValid;
+        }
+
+        private static bool IsValid(int numericItemq) => numericItemq > 0 && numericItemq <= 100;
     }
 }
