@@ -22,26 +22,18 @@ namespace lab1PSSC
 
         }
 
-        //private static string checkItemExists(List<UnvalidatedCustomerItem> list, string cod) {
-        //    foreach (var item in list)
-        //    {
-        //        if (item.itemCode.Equals(cod))
-        //        {
-        //            return "Produsul exista!";
+        private static string checkItemExists(List<UnvalidatedCustomerItem> list, string cod)
+        {
+            foreach (var item in list)
+            {
+                if (item.itemCode.Equals(cod))
+                {
+                    return "Produsul exista!";
 
-        //        }
-        //    }
-        //    return "Produsul nu exista sau cod gresit!";
-        //}
-
-        //private static async Task<string> checkItemExists(string cod)
-        //{
-        //    var item = ItemRegistrationNumber.TryParse(cod);
-        //    var itemExists = await item.Match(
-        //        Some: item => CheckItemExists(item).Match(Succ: value => value, exception => false),
-        //        None: () => Task.FromResult(false)
-        //    );
-        //}
+                }
+            }
+            return "Produsul nu exista sau cod gresit!";
+        }
 
         private static string checkStock(List<UnvalidatedCustomerItem> list, string cod)
         {
@@ -136,24 +128,23 @@ namespace lab1PSSC
                             }
                         break;
                     case 3:
-                        string verificareAdresa = "";
-                        Console.WriteLine("introduceti adresa: ");
-                        verificareAdresa = Console.ReadLine();
-                        // Console.WriteLine(checkAddress(listOfItemsCopy, verificareAdresa));
-                        var address = Address.TryParseAddress(verificareAdresa);
-                        var addressCheck = await address.Match(
-                                Some: address => CheckItemAddress(address).Match(Succ: value => value, exception => false),
-                                None: () => Task.FromResult(false)
-                            );
-                        if (addressCheck)
-                        {
-                            Console.WriteLine("Adresa valida!");
-                        }
-                        else
-                        {
-                            Console.WriteLine("Adresa invalida!");
-                        }
-
+                            string verificareAdresa = "";
+                            Console.WriteLine("introduceti adresa: ");
+                            verificareAdresa = Console.ReadLine();
+                            // Console.WriteLine(checkAddress(listOfItemsCopy, verificareAdresa));
+                            var address = Address.TryParseAddress(verificareAdresa);
+                            var addressCheck = await address.Match(
+                                    Some: address => CheckItemAddress(address).Match(Succ: value => value, exception => false),
+                                    None: () => Task.FromResult(false)
+                                );
+                            if (addressCheck)
+                            {
+                                Console.WriteLine("Adresa valida!");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Adresa invalida!");
+                            }
                         break;
                 }
             } while (opt != 0);
