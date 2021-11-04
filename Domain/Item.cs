@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static LanguageExt.Prelude;
+using LanguageExt;
 
 namespace lab1PSSC.Domain
 {
@@ -28,18 +30,31 @@ namespace lab1PSSC.Domain
 
         public static Item operator +(Item a, Item b) => new Item((a.Value + b.Value));
 
-        public static bool TryParseItemQuantity(string itemqString, out Item itemq)
+        public static bool TryParseItemQuantity(string itemqString)
         {
             bool isValid = false;
-            itemq = null;
+            //itemq = null;
             if (int.TryParse(itemqString, out int numericItemq)) {
                 if (IsValid(numericItemq)) {
                     isValid = true;
-                    itemq = new(numericItemq);
+                   // itemq = new(numericItemq);
                 }
             }
             return isValid;
         }
+
+        public static Option<Item> TryParseItem(string itemqString)
+        {
+            if (int.TryParse(itemqString, out int numericItemq) && IsValid(numericItemq))
+            {
+                return Some<Item>(new(numericItemq));
+            }
+            else
+            {
+                return None;
+            }
+        }
+
 
         private static bool IsValid(int numericItemq) => numericItemq > 0 && numericItemq <= 100;
     }

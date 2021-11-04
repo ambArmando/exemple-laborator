@@ -45,3 +45,5 @@ E:\PSSC\lab1PSSCAmbrusArmando\obj\Debug\net5.0\lab1PSSCAmbrusArmando.dll
 E:\PSSC\lab1PSSCAmbrusArmando\obj\Debug\net5.0\ref\lab1PSSCAmbrusArmando.dll
 E:\PSSC\lab1PSSCAmbrusArmando\obj\Debug\net5.0\lab1PSSCAmbrusArmando.pdb
 E:\PSSC\lab1PSSCAmbrusArmando\obj\Debug\net5.0\lab1PSSCAmbrusArmando.genruntimeconfig.cache
+E:\PSSC\lab1PSSCAmbrusArmando\bin\Debug\net5.0\LanguageExt.Core.dll
+E:\PSSC\lab1PSSCAmbrusArmando\bin\Debug\net5.0\Microsoft.Bcl.AsyncInterfaces.dll

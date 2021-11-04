@@ -1,4 +1,6 @@
 ﻿using System.Text.RegularExpressions;
+using LanguageExt;
+using static LanguageExt.Prelude;
 
 namespace lab1PSSC.Domain
 {
@@ -29,6 +31,18 @@ namespace lab1PSSC.Domain
                 address1 = new(address);
             }
             return isValid;
+        }
+
+        public static Option<Address> TryParseAddress(string address)
+        {
+            if (IsValid(address))
+            {
+                return Some<Address>(new(address));
+            }
+            else
+            {
+                return None;
+            }
         }
 
         private static bool IsValid(string stringValue) => ValidPattern.IsMatch(stringValue);

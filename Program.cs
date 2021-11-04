@@ -2,13 +2,17 @@
 using System.Collections.Generic;
 using static lab1PSSC.Domain.CartItems;
 using lab1PSSC.Domain;
-
+using static LanguageExt.Prelude;
+using LanguageExt;
+using System.Threading.Tasks;
 
 namespace lab1PSSC
 {
     
     class Program
     {
+        static List<UnvalidatedCustomerItem> listOfItemsCopy;
+
         private static void showItems(List<UnvalidatedCustomerItem> list)
         {
             foreach(var item in list)
@@ -18,17 +22,27 @@ namespace lab1PSSC
 
         }
 
-        private static string checkItemExists(List<UnvalidatedCustomerItem> list, string cod) {
-            foreach (var item in list)
-            {
-                if (item.itemCode.Equals(cod))
-                {
-                    return "Produsul exista!";
+        //private static string checkItemExists(List<UnvalidatedCustomerItem> list, string cod) {
+        //    foreach (var item in list)
+        //    {
+        //        if (item.itemCode.Equals(cod))
+        //        {
+        //            return "Produsul exista!";
 
-                }
-            }
-            return "Produsul nu exista sau cod gresit!";
-        }
+        //        }
+        //    }
+        //    return "Produsul nu exista sau cod gresit!";
+        //}
+
+        //private static async Task<string> checkItemExists(string cod)
+        //{
+        //    var item = ItemRegistrationNumber.TryParse(cod);
+        //    var itemExists = await item.Match(
+        //        Some: item => CheckItemExists(item).Match(Succ: value => value, exception => false),
+        //        None: () => Task.FromResult(false)
+        //    );
+        //}
+
         private static string checkStock(List<UnvalidatedCustomerItem> list, string cod)
         {
             foreach (var item in list)
@@ -54,16 +68,15 @@ namespace lab1PSSC
             return "Adresa invalida!";
         }
 
-        static void Main(string[] args) {
+        static async Task Main(string[] args) {
             int opt = int.MaxValue;
             var listOfItems = ReadListOfItems();
-            var listOfItemsCopy = new List<UnvalidatedCustomerItem>(listOfItems);
+            listOfItemsCopy = new List<UnvalidatedCustomerItem>(listOfItems);
             listOfItems.ToArray();
             showItems(listOfItemsCopy);
             PayItemsCommand command = new(listOfItems);
             PaidItemWorkflow workflow = new PaidItemWorkflow();
-            var result = workflow.Execute(command, (registrationCode) => true);
-
+            var result = await workflow.ExecuteAsync(command, CheckItemExists);
             result.Match(
                     whenCartItemsFailedPayEvent: @event => {
                         Console.WriteLine($"Publish failed {@event.Reason}");
@@ -88,19 +101,59 @@ namespace lab1PSSC
                     case 1: string cod = "";
                             Console.WriteLine("codul produsului cautat: ");
                             cod = Console.ReadLine();
-                            Console.WriteLine(checkItemExists(listOfItemsCopy, cod));
-                            break;
+                            //Console.WriteLine(checkItemExists(listOfItemsCopy, cod));
+                            var item = ItemRegistrationNumber.TryParse(cod);
+                            var itemExists = await item.Match(
+                                Some: item => CheckItemExists(item).Match(Succ: value => value, exception => false),
+                                None: () => Task.FromResult(false)
+                            );
+                            if (itemExists)
+                            {
+                                Console.WriteLine("Itemul cautat exista!");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Nu exista itemul cautat!");
+                            }
+                        break;
                     case 2:
                             string verificareStoc = "";
-                            Console.WriteLine("codul produsului: ");
+                            Console.WriteLine("verificare stock pentru cod produs: ");
                             verificareStoc = Console.ReadLine();
-                            Console.WriteLine(checkStock(listOfItemsCopy, verificareStoc));
-                            break;
+                            // Console.WriteLine(checkStock(listOfItemsCopy, verificareStoc));
+                            var quantity = ItemRegistrationNumber.TryParse(verificareStoc);
+                            var quantityCheck = await quantity.Match(
+                                    Some: quantity => CheckItemStock(quantity).Match(Succ: value => value, exception => false),
+                                    None: () => Task.FromResult(false)
+                                );
+                            if (quantityCheck)
+                            {
+                                Console.WriteLine("Stoc disponibil!");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Stoc epuizat!");
+                            }
+                        break;
                     case 3:
                         string verificareAdresa = "";
                         Console.WriteLine("introduceti adresa: ");
                         verificareAdresa = Console.ReadLine();
-                        Console.WriteLine(checkAddress(listOfItemsCopy, verificareAdresa));
+                        // Console.WriteLine(checkAddress(listOfItemsCopy, verificareAdresa));
+                        var address = Address.TryParseAddress(verificareAdresa);
+                        var addressCheck = await address.Match(
+                                Some: address => CheckItemAddress(address).Match(Succ: value => value, exception => false),
+                                None: () => Task.FromResult(false)
+                            );
+                        if (addressCheck)
+                        {
+                            Console.WriteLine("Adresa valida!");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Adresa invalida!");
+                        }
+
                         break;
                 }
             } while (opt != 0);
@@ -149,6 +202,56 @@ namespace lab1PSSC
             return Console.ReadLine();
         }
 
+        private static TryAsync<bool> CheckItemExists(ItemRegistrationNumber itemNumber)
+        {
+            Func<Task<bool>> func = async () =>
+            {
+                foreach (var item in listOfItemsCopy)
+                {
+                    if (item.itemCode.Equals(itemNumber.ToString()))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            };
+            return TryAsync(func);
+        }
+
+        private static TryAsync<bool> CheckItemStock(ItemRegistrationNumber itm)
+        {
+            Func<Task<bool>> func = async () =>
+            {
+                foreach (var item in listOfItemsCopy)
+                {
+                    if (item.itemCode.Equals(itm.ToString()))
+                    {
+                        if (Convert.ToInt32(item.itemQuantity) > 0)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            };
+            return TryAsync(func);
+        }
+
+        private static TryAsync<bool> CheckItemAddress(Address address)
+        {
+            Func<Task<bool>> func = async () =>
+            {
+                foreach (var item in listOfItemsCopy)
+                {
+                    if (item.address.Equals(address.ToString()))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            };
+            return TryAsync(func);
+        }
     }
 }
 

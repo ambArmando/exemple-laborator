@@ -7,15 +7,17 @@ using static lab1PSSC.Domain.CartItems;
 using static lab1PSSC.Domain.CartItemsPaidEvent;
 using lab1PSSC.Domain;
 using static lab1PSSC.Domain.CartItemsOperations;
+using LanguageExt;
+using System.Threading.Tasks;
 
 namespace lab1PSSC
 {
     class PaidItemWorkflow
     {
-        public ICartItemsPaidEvent Execute(PayItemsCommand command, Func<ItemRegistrationNumber, bool> checkItemExists) {
+        public async Task<ICartItemsPaidEvent> ExecuteAsync(PayItemsCommand command, Func<ItemRegistrationNumber, TryAsync<bool>> checkItemExists) {
 
             UnvalidatedCartItems unvalidatedCartItems = new UnvalidatedCartItems(command.InputCartItems);
-            ICartItems items = ValidateCartItems(checkItemExists, unvalidatedCartItems);
+            ICartItems items = await ValidateCartItems(checkItemExists, unvalidatedCartItems);
             items = CalculatePrice(items);
             items = PayCartItems(items);
 

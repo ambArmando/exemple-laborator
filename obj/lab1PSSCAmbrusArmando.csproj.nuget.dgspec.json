@@ -43,6 +43,10 @@
             "CSharp.Choices": {
               "target": "Package",
               "version": "[2.0.1, )"
+            },
+            "LanguageExt.Core": {
+              "target": "Package",
+              "version": "[4.0.3, )"
             }
           },
           "imports": [

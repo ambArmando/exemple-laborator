@@ -1,4 +1,8 @@
-﻿namespace lab1PSSC.Domain
+﻿using LanguageExt;
+using static LanguageExt.Prelude;
+
+
+namespace lab1PSSC.Domain
 {
     public record Payment
     {
@@ -25,6 +29,18 @@
                 payment = new(paymentinfo);
             }
             return isValid;
+        }
+
+        public static Option<Payment> TryParsePayment(string payment)
+        {
+            if (payment.Equals("y") || payment.Equals("n"))
+            {
+                return Some<Payment>(new(payment));
+            }
+            else
+            {
+                return None;
+            }
         }
 
         public override string ToString()
