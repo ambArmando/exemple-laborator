@@ -5,6 +5,10 @@ using lab1PSSC.Domain;
 using static LanguageExt.Prelude;
 using LanguageExt;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
+using lab1PSSCAmbrusArmando;
+using lab1PSSCAmbrusArmando.Repositories;
 
 namespace lab1PSSC
 {
@@ -12,6 +16,9 @@ namespace lab1PSSC
     class Program
     {
         static List<UnvalidatedCustomerItem> listOfItemsCopy;
+
+        private static string ConnectionString = "Server=DESKTOP-4NGLF94;Database=Database1;Trusted_Connection=True;MultipleActiveResultSets=true";
+
 
         private static void showItems(List<UnvalidatedCustomerItem> list)
         {
@@ -66,9 +73,22 @@ namespace lab1PSSC
             listOfItemsCopy = new List<UnvalidatedCustomerItem>(listOfItems);
             listOfItems.ToArray();
             showItems(listOfItemsCopy);
+
+            using ILoggerFactory loggerFactory = ConfigureLoggerFactory();
+            ILogger<PaidItemWorkflow> logger = loggerFactory.CreateLogger<PaidItemWorkflow>();
+
             PayItemsCommand command = new(listOfItems);
-            PaidItemWorkflow workflow = new PaidItemWorkflow();
-            var result = await workflow.ExecuteAsync(command, CheckItemExists);
+
+            var dbContextBuilder = new DbContextOptionsBuilder<ProductContext>()
+                                               .UseSqlServer(ConnectionString)
+                                               .UseLoggerFactory(loggerFactory);
+
+            ProductContext productContext = new ProductContext(dbContextBuilder.Options);
+            ProductRepository productRepository = new(productContext);
+            OrderHeaderRepository orderHeaderRepository = new(productContext);
+
+            PaidItemWorkflow workflow = new(productRepository, orderHeaderRepository, logger);
+            var result = await workflow.ExecuteAsync(command);
             result.Match(
                     whenCartItemsFailedPayEvent: @event => {
                         Console.WriteLine($"Publish failed {@event.Reason}");
@@ -81,73 +101,73 @@ namespace lab1PSSC
                     }
                 );
 
-            do {
-                Console.WriteLine("0.Exit");
-                Console.WriteLine("1.Verificare produs");
-                Console.WriteLine("2.Verificare stoc");
-                Console.WriteLine("3.Verificare adresa");
-                Console.WriteLine("alege: ");
-                opt = Convert.ToInt32(Console.ReadLine());
+            //do {
+            //    Console.WriteLine("0.Exit");
+            //    Console.WriteLine("1.Verificare produs");
+            //    Console.WriteLine("2.Verificare stoc");
+            //    Console.WriteLine("3.Verificare adresa");
+            //    Console.WriteLine("alege: ");
+            //    opt = Convert.ToInt32(Console.ReadLine());
 
-                switch(opt) {
-                    case 1: string cod = "";
-                            Console.WriteLine("codul produsului cautat: ");
-                            cod = Console.ReadLine();
-                            //Console.WriteLine(checkItemExists(listOfItemsCopy, cod));
-                            var item = ItemRegistrationNumber.TryParse(cod);
-                            var itemExists = await item.Match(
-                                Some: item => CheckItemExists(item).Match(Succ: value => value, exception => false),
-                                None: () => Task.FromResult(false)
-                            );
-                            if (itemExists)
-                            {
-                                Console.WriteLine("Itemul cautat exista!");
-                            }
-                            else
-                            {
-                                Console.WriteLine("Nu exista itemul cautat!");
-                            }
-                        break;
-                    case 2:
-                            string verificareStoc = "";
-                            Console.WriteLine("verificare stock pentru cod produs: ");
-                            verificareStoc = Console.ReadLine();
-                            // Console.WriteLine(checkStock(listOfItemsCopy, verificareStoc));
-                            var quantity = ItemRegistrationNumber.TryParse(verificareStoc);
-                            var quantityCheck = await quantity.Match(
-                                    Some: quantity => CheckItemStock(quantity).Match(Succ: value => value, exception => false),
-                                    None: () => Task.FromResult(false)
-                                );
-                            if (quantityCheck)
-                            {
-                                Console.WriteLine("Stoc disponibil!");
-                            }
-                            else
-                            {
-                                Console.WriteLine("Stoc epuizat!");
-                            }
-                        break;
-                    case 3:
-                            string verificareAdresa = "";
-                            Console.WriteLine("introduceti adresa: ");
-                            verificareAdresa = Console.ReadLine();
-                            // Console.WriteLine(checkAddress(listOfItemsCopy, verificareAdresa));
-                            var address = Address.TryParseAddress(verificareAdresa);
-                            var addressCheck = await address.Match(
-                                    Some: address => CheckItemAddress(address).Match(Succ: value => value, exception => false),
-                                    None: () => Task.FromResult(false)
-                                );
-                            if (addressCheck)
-                            {
-                                Console.WriteLine("Adresa valida!");
-                            }
-                            else
-                            {
-                                Console.WriteLine("Adresa invalida!");
-                            }
-                        break;
-                }
-            } while (opt != 0);
+            //    switch(opt) {
+            //        case 1: string cod = "";
+            //                Console.WriteLine("codul produsului cautat: ");
+            //                cod = Console.ReadLine();
+            //                //Console.WriteLine(checkItemExists(listOfItemsCopy, cod));
+            //                var item = ItemRegistrationNumber.TryParse(cod);
+            //                var itemExists = await item.Match(
+            //                    Some: item => CheckItemExists(item).Match(Succ: value => value, exception => false),
+            //                    None: () => Task.FromResult(false)
+            //                );
+            //                if (itemExists)
+            //                {
+            //                    Console.WriteLine("Itemul cautat exista!");
+            //                }
+            //                else
+            //                {
+            //                    Console.WriteLine("Nu exista itemul cautat!");
+            //                }
+            //            break;
+            //        case 2:
+            //                string verificareStoc = "";
+            //                Console.WriteLine("verificare stock pentru cod produs: ");
+            //                verificareStoc = Console.ReadLine();
+            //                // Console.WriteLine(checkStock(listOfItemsCopy, verificareStoc));
+            //                var quantity = ItemRegistrationNumber.TryParse(verificareStoc);
+            //                var quantityCheck = await quantity.Match(
+            //                        Some: quantity => CheckItemStock(quantity).Match(Succ: value => value, exception => false),
+            //                        None: () => Task.FromResult(false)
+            //                    );
+            //                if (quantityCheck)
+            //                {
+            //                    Console.WriteLine("Stoc disponibil!");
+            //                }
+            //                else
+            //                {
+            //                    Console.WriteLine("Stoc epuizat!");
+            //                }
+            //            break;
+            //        case 3:
+            //                string verificareAdresa = "";
+            //                Console.WriteLine("introduceti adresa: ");
+            //                verificareAdresa = Console.ReadLine();
+            //                // Console.WriteLine(checkAddress(listOfItemsCopy, verificareAdresa));
+            //                var address = Address.TryParseAddress(verificareAdresa);
+            //                var addressCheck = await address.Match(
+            //                        Some: address => CheckItemAddress(address).Match(Succ: value => value, exception => false),
+            //                        None: () => Task.FromResult(false)
+            //                    );
+            //                if (addressCheck)
+            //                {
+            //                    Console.WriteLine("Adresa valida!");
+            //                }
+            //                else
+            //                {
+            //                    Console.WriteLine("Adresa invalida!");
+            //                }
+            //            break;
+            //    }
+            //} while (opt != 0);
 
         }
         private static List<UnvalidatedCustomerItem> ReadListOfItems() {
@@ -242,6 +262,18 @@ namespace lab1PSSC
                 return false;
             };
             return TryAsync(func);
+        }
+
+        private static ILoggerFactory ConfigureLoggerFactory()
+        {
+            return LoggerFactory.Create(builder =>
+                                builder.AddSimpleConsole(options =>
+                                {
+                                    options.IncludeScopes = true;
+                                    options.SingleLine = true;
+                                    options.TimestampFormat = "hh:mm:ss ";
+                                })
+                                .AddProvider(new Microsoft.Extensions.Logging.Debug.DebugLoggerProvider()));
         }
     }
 }

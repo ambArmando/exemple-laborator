@@ -8,7 +8,7 @@ namespace lab1PSSC.Domain
     {
         public string Value { get; }
 
-        public Payment(string state)
+        internal Payment(string state)
         {
             if (state.Equals("y") || state.Equals("n"))
             {

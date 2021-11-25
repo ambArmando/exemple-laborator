@@ -12,7 +12,7 @@ namespace lab1PSSC.Domain
     {
         public int Value { get; }
 
-        public Item(int quantity)
+        internal Item(int quantity)
         {
             if (IsValid(quantity))
             {
@@ -56,6 +56,6 @@ namespace lab1PSSC.Domain
         }
 
 
-        private static bool IsValid(int numericItemq) => numericItemq > 0 && numericItemq <= 100;
+        private static bool IsValid(int numericItemq) => numericItemq > 0 && numericItemq <= 1000;
     }
 }

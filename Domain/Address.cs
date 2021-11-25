@@ -10,7 +10,7 @@ namespace lab1PSSC.Domain
 
         public string Value { get; }
 
-        private Address(string value)
+        internal Address(string value)
         {
             if (ValidPattern.IsMatch(value))
             {

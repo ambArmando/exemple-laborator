@@ -15,7 +15,7 @@ namespace lab1PSSC.Domain
 
         public string Value { get; }
 
-        private ItemRegistrationNumber(string value)
+        internal ItemRegistrationNumber(string value)
         {
             if (ValidPattern.IsMatch(value))
             {

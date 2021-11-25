@@ -28,7 +28,7 @@ namespace lab1PSSC.Domain
         {
             public string Reason { get; }
 
-            internal CartItemsFailedPayEvent(string reason)
+            internal CartItemsFailedPayEvent(/*IReadOnlyCollection<UnvalidatedCustomerItem> itemList,*/ string reason)
             {
                 Reason = reason;
             }

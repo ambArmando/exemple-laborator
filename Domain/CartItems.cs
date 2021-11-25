@@ -42,6 +42,18 @@ namespace lab1PSSC.Domain
             public IReadOnlyCollection<ValidatedCustomerItem> ItemList { get; }
         }
 
+        public record FailedCartItem : ICartItems
+        {
+            internal FailedCartItem(IReadOnlyCollection<UnvalidatedCustomerItem> itemList, Exception ex)
+            {
+                ItemList = itemList;
+                Exception = ex;
+            }
+
+            public IReadOnlyCollection<UnvalidatedCustomerItem> ItemList { get; }
+            public Exception Exception { get; }
+        }
+
         public record CalculatedItemPrice : ICartItems
         {
             internal CalculatedItemPrice(IReadOnlyCollection<ItemFinalPrice> itemList)
