@@ -1,26 +1,36 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
+﻿using System;
+using Events;
+using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using ServiceBus;
 
-namespace L05
+namespace EventProcessor
 {
-    public class Program
+    class Program
     {
-        public static void Main(string[] args)
+        static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+            CreateHostBuilder(args)
+                .Build()
+                .Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
+       Host.CreateDefaultBuilder(args)
+           .ConfigureServices((hostContext, services) =>
+           {
+               services.AddAzureClients(builder =>
+               {
+                   builder.AddServiceBusClient(hostContext.Configuration.GetConnectionString("ServiceBus"));
+               });
+
+               services.AddSingleton<IEventListener, ServiceBusTopicEventListener>();
+               services.AddSingleton<IEventHandler, ItemsPublishedEventHandler>();
+               //aici se creaza handler pentru diferite evenimente
+
+               services.AddHostedService<Worker>();
+           });
     }
 }
