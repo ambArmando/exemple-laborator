@@ -63,7 +63,7 @@ namespace lab1PSSC
                                  FinalPrice = item.finalPrice.Value
                              }).ToList()
                          }
-                         from publishEventResult in eventSender.SendAsync("numeleTopiculuiMeu(grades)", eventToPublish).ToEither(ex => new FailedCartItem(unvalidatedCartItems.ItemList, ex) as ICartItems)
+                         from publishEventResult in eventSender.SendAsync("topic", eventToPublish).ToEither(ex => new FailedCartItem(unvalidatedCartItems.ItemList, ex) as ICartItems)
                              select successfulEvent;
                 return await result.Match(
                   Left: items => GenerateFailedEvent(items) as ICartItemsPaidEvent,
