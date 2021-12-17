@@ -17,10 +17,18 @@ namespace lab1PSSC.Domain
             public string Csv { get; }
             public string PaidItems { get; }
 
+            public IEnumerable<ItemFinalPrice> Items { get; }
+
             internal CartItemsSucceededPayEvent(string csv, string paidItems)
             {
                 Csv = csv;
                 PaidItems = paidItems;
+            }
+
+            internal CartItemsSucceededPayEvent(string csv, IEnumerable<ItemFinalPrice> items)
+            {
+                Csv = csv;
+                Items = items;
             }
         }
 

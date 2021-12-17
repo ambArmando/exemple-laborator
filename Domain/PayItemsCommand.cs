@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace lab1PSSC.Domain
 {
-    class PayItemsCommand
+    public class PayItemsCommand
     {
         public PayItemsCommand(IReadOnlyCollection<UnvalidatedCustomerItem> inputCartItems) {
             InputCartItems = inputCartItems;

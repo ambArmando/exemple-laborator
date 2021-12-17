@@ -12,19 +12,26 @@ using System.Threading.Tasks;
 using lab1PSSCAmbrusArmando.Repositories;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
+using lab1PSSCAmbrusArmando.Events;
+using lab1PSSCAmbrusArmando.Models;
+using Events;
 
 namespace lab1PSSC
 {
-    class PaidItemWorkflow
+    public class PaidItemWorkflow
     {
         private readonly ProductRepository productRepository;
         private readonly OrderHeaderRepository orderHeader;
+        private readonly OrderLinesRepository orderLine;
         private readonly ILogger<PaidItemWorkflow> logger;
-        public PaidItemWorkflow(ProductRepository productRepository, OrderHeaderRepository orderHeaderRepository, ILogger<PaidItemWorkflow> logger)
+        private readonly IEventSender eventSender;
+        public PaidItemWorkflow(ProductRepository productRepository, OrderHeaderRepository orderHeaderRepository, OrderLinesRepository orderLinesRepository, ILogger<PaidItemWorkflow> logger, IEventSender eventSender)
         {
             this.productRepository = productRepository;
             this.orderHeader = orderHeaderRepository;
+            this.orderLine = orderLinesRepository;
             this.logger = logger;
+            this.eventSender = eventSender;
         }
 
         public async Task<ICartItemsPaidEvent> ExecuteAsync(PayItemsCommand command)
@@ -32,18 +39,63 @@ namespace lab1PSSC
 
             UnvalidatedCartItems unvalidatedCartItems = new UnvalidatedCartItems(command.InputCartItems);
 
-            var result = from items in productRepository.TryGetExistingStudents(unvalidatedCartItems.ItemList.Select(item => item.itemCode))
+            var result = from items in productRepository.TryGetExistingItems(unvalidatedCartItems.ItemList.Select(item => item.itemCode))
                          .ToEither(ex => new FailedCartItem(unvalidatedCartItems.ItemList, ex) as ICartItems)
-                         from existingItems in orderHeader.TryGetExistingItems().ToEither(ex => new FailedCartItem(unvalidatedCartItems.ItemList, ex) as ICartItems)
+                         from existingOrderLine in orderLine.TryGetExistingOrderLines().ToEither(ex => new FailedCartItem(unvalidatedCartItems.ItemList, ex) as ICartItems)
                          let checkItemExist = (Func<ItemRegistrationNumber, Option<ItemRegistrationNumber>>)(item => CheckItemExists(items, item))
-                         from paidItems in ExecuteWorkflowAsync(unvalidatedCartItems, existingItems, checkItemExist).ToAsync()
-                         select paidItems;
+                         from paidItems in ExecuteWorkflowAsync(unvalidatedCartItems, existingOrderLine, checkItemExist).ToAsync()
+                         from _ in orderLine.TrySaveOrderLines(paidItems).ToEither(ex => new FailedCartItem(unvalidatedCartItems.ItemList, ex) as ICartItems)
+                         let cartItems = paidItems.ItemList.Select(item => new ItemFinalPrice(
+                                                item.ItemRegistrationNumber,
+                                                itemq: item.itemq,
+                                                address: item.address,
+                                                payment: item.payment,
+                                                finalPrice: item.finalPrice))
+                         let successfulEvent = new CartItemsSucceededPayEvent("succesfull event", cartItems)
+                         let eventToPublish = new ItemsPaidEvent()
+                         {
+                             Items = cartItems.Select(item => new CartItemDto()
+                             {
+                                 Name = item.ItemRegistrationNumber.Value,
+                                 ItemRegistrationNumber = item.ItemRegistrationNumber.Value,
+                                 Itemq = item.itemq.Value,
+                                 Address = item.address.Value,
+                                 FinalPrice = item.finalPrice.Value
+                             }).ToList()
+                         }
+                         from publishEventResult in eventSender.SendAsync("numeleTopiculuiMeu(grades)", eventToPublish).ToEither(ex => new FailedCartItem(unvalidatedCartItems.ItemList, ex) as ICartItems)
+                             select successfulEvent;
+                return await result.Match(
+                  Left: items => GenerateFailedEvent(items) as ICartItemsPaidEvent,
+                  Right: paidCart => paidCart
+                 );
+           
 
-            return await result.Match(
-                Left: items => GenerateFailedEvent(items) as ICartItemsPaidEvent,
-                Right: rItems => new CartItemsSucceededPayEvent(rItems.Csv, rItems.ItemList.ToString())
-                );
+
+               // select paidItems;
+            //return await result.Match(
+            //       Left: items => GenerateFailedEvent(items) as ICartItemsPaidEvent,
+            //       Right: paidCart => new CartItemsSucceededPayEvent(paidCart.Csv, paidCart.ItemList)
+            //   );
         }
+
+        //public async Task<ICartItemsPaidEvent> ExecuteAsync(PayItemsCommand command)
+        //{
+
+        //    UnvalidatedCartItems unvalidatedCartItems = new UnvalidatedCartItems(command.InputCartItems);
+
+        //    var result = from items in productRepository.TryGetExistingItems(unvalidatedCartItems.ItemList.Select(item => item.itemCode))
+        //                 .ToEither(ex => new FailedCartItem(unvalidatedCartItems.ItemList, ex) as ICartItems)
+        //                 from existingItems in orderHeader.TryGetExistingItems().ToEither(ex => new FailedCartItem(unvalidatedCartItems.ItemList, ex) as ICartItems)
+        //                 let checkItemExist = (Func<ItemRegistrationNumber, Option<ItemRegistrationNumber>>)(item => CheckItemExists(items, item))
+        //                 from paidItems in ExecuteWorkflowAsync(unvalidatedCartItems, existingItems, checkItemExist).ToAsync()
+        //                 select paidItems;
+
+        //    return await result.Match(
+        //        Left: items => GenerateFailedEvent(items) as ICartItemsPaidEvent,
+        //        Right: rItems => new CartItemsSucceededPayEvent(rItems.Csv, rItems.ItemList.ToString())
+        //        );
+        //}
 
         private async Task<Either<ICartItems, PaidCartItems>> ExecuteWorkflowAsync(UnvalidatedCartItems unvalidatedItems,
                                                                                    IEnumerable<ItemFinalPrice> existingItems, Func<ItemRegistrationNumber,

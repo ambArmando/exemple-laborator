@@ -9,15 +9,18 @@ using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using lab1PSSCAmbrusArmando;
 using lab1PSSCAmbrusArmando.Repositories;
+using Microsoft.Extensions.Hosting;
+using Events;
 
 namespace lab1PSSC
 {
     
     class Program
     {
+        private static readonly IEventSender eventSender;
         static List<UnvalidatedCustomerItem> listOfItemsCopy;
-
-        private static string ConnectionString = "Server=DESKTOP-4NGLF94;Database=Database1;Trusted_Connection=True;MultipleActiveResultSets=true";
+        //Server=DESKTOP-4NGLF94;Database=Database1;Trusted_Connection=True;MultipleActiveResultSets=true
+        private static string ConnectionString = @"Server=(localdb)\MSSQLLocalDB;Database=psscDB;Trusted_Connection=True;MultipleActiveResultSets=true";
 
 
         private static void showItems(List<UnvalidatedCustomerItem> list)
@@ -71,7 +74,7 @@ namespace lab1PSSC
             int opt = int.MaxValue;
             var listOfItems = ReadListOfItems();
             listOfItemsCopy = new List<UnvalidatedCustomerItem>(listOfItems);
-            listOfItems.ToArray();
+           // listOfItems.ToArray();
             showItems(listOfItemsCopy);
 
             using ILoggerFactory loggerFactory = ConfigureLoggerFactory();
@@ -86,8 +89,9 @@ namespace lab1PSSC
             ProductContext productContext = new ProductContext(dbContextBuilder.Options);
             ProductRepository productRepository = new(productContext);
             OrderHeaderRepository orderHeaderRepository = new(productContext);
-
-            PaidItemWorkflow workflow = new(productRepository, orderHeaderRepository, logger);
+            OrderLinesRepository orderLinesRepository = new(productContext);
+            
+            PaidItemWorkflow workflow = new(productRepository, orderHeaderRepository, orderLinesRepository, logger, eventSender);
             var result = await workflow.ExecuteAsync(command);
             result.Match(
                     whenCartItemsFailedPayEvent: @event => {
@@ -170,6 +174,7 @@ namespace lab1PSSC
             //} while (opt != 0);
 
         }
+
         private static List<UnvalidatedCustomerItem> ReadListOfItems() {
 
             List<UnvalidatedCustomerItem> listOfItems = new();
@@ -193,13 +198,14 @@ namespace lab1PSSC
                     break;
                 }
 
-                var paid = ReadValue("paid[y/n]: ");
-                if (string.IsNullOrEmpty(paid))
+                var input = ReadValue("price: ");
+                int price = Convert.ToInt32(input);
+                if (price < 1 )
                 {
                     break;
                 }
 
-                listOfItems.Add(new(itemCode, itemQuantity, address, paid));
+                listOfItems.Add(new(itemCode, itemQuantity, address, price));
 
             } while(true);
 

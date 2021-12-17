@@ -7,6 +7,33 @@ namespace lab1PSSC.Domain
     public record Payment
     {
         public string Value { get; }
+        public int intValue { get; }
+
+        public Payment(int value)
+        {
+            if (IsValid(value))
+            {
+                intValue = value;
+            }
+            else
+            {
+                throw new InvalidPaymentException($"{value:0.##} is an invalid price value.");
+            }
+        }
+
+        public static Option<Payment> TryParsePayment(int price)
+        {
+            if (price > 0)
+            {
+                return Some<Payment>(new(price));
+            }
+            else
+            {
+                return None;
+            }
+        }
+
+        private static bool IsValid(int price) => price > 0;
 
         internal Payment(string state)
         {

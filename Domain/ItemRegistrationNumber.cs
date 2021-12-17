@@ -11,6 +11,7 @@ namespace lab1PSSC.Domain
 {
     public record ItemRegistrationNumber
     {
+        public const string Pattern = "^pr[0-9]";
         private static readonly Regex ValidPattern = new("^pr[0-9]");
 
         public string Value { get; }
